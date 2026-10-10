@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">NaHřebeni.info | Aktuální podmínky</title>
+
+  <link 
+    href="https://blog.nahrebeni.info/css/index.css"
+    rel="stylesheet" 
+    type="text/css"
+  />
+
+  <style>
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+    }
+
+    #nav {
+      margin-top: 0 !important;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .hut {
+      font-weight: bold;
+    }
+
+    article {
+      margin-bottom: 40px;
+    }
+
+    article:last-child {
+      margin-bottom: 0;
+    }
+
+    article > p {
+      margin-top: 5px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<nav id="nav" class="show">
+  <span id="blog-info">
+      <a class="nav-site-title" href="/">
+      <span class="site-name">NaHřebeni.info</span>
+      </a>
+  </span>
+
+  <div id="menus">
+      <div class="menus_items">
+          <div class="menus_item">
+              <a class="site-page" href="https://nahrebeni.info">
+                  <span id="menu-ridge">HŘEBEN</span>
+              </a>
+          </div>
+
+          <div class="menus_item">
+              <a class="site-page always-active" href="/">
+                  <span id="menu-conditions">AKTUÁLNÍ PODMÍNKY</span>
+              </a>
+          </div>
+
+          <div class="menus_item">
+              <a class="site-page" href="https://blog.nahrebeni.info">
+                  <span id="menu-blog">NÁŠ OSOBNÍ BLOG</span>
+              </a>
+          </div>
+
+          <div class="menus_item language-switcher">
+              <a class="site-page language-cs" href="/">
+                  <span id="menu-language-cs">CZ</span>
+              </a>
+              <span>|</span>
+              <a class="site-page language-en" href="?lang=en">
+                  <span>EN</span>
+              </a>
+          </div>
+      </div>
+
+      <div id="toggle-menu">
+      <span class="site-page">
+          <i class="fas fa-bars fa-fw"></i>
+      </span>
+      </div>
+  </div>
+
+  </nav>
+
+  <br>
+  <br>
+  <br>
+
+  <div id="posts"></div>
+
+  <script>
+
+    /*
+     * Language
+     *
+     * Default: Czech
+     * English: ?lang=en
+     */
+    const currentParams = new URLSearchParams(window.location.search);
+
+    const currentLanguage = currentParams.get("lang") === "en"
+      ? "en"
+      : "cs";
+
+    document.documentElement.lang = currentLanguage;
+
+    document
+      .querySelector(`.language-${currentLanguage}`)
+      .classList.add("always-active");
+
+    document.title =
+      currentLanguage === "en"
+        ? "NaHřebeni.info | Current Conditions"
+        : "NaHřebeni.info | Aktuální podmínky";
+
+    /*
+     * Menu
+     */
+    const menuTranslations = {
+      cs: {
+        ridge: "HŘEBEN",
+        conditions: "AKTUÁLNÍ PODMÍNKY",
+        blog: "NÁŠ OSOBNÍ BLOG"
+      },
+
+      en: {
+        ridge: "RIDGE",
+        conditions: "CURRENT CONDITIONS",
+        blog: "OUR PERSONAL BLOG"
+      }
+    };
+
+    document.getElementById("menu-ridge").textContent =
+      menuTranslations[currentLanguage].ridge;
+
+    document.getElementById("menu-conditions").textContent =
+      menuTranslations[currentLanguage].conditions;
+
+    document.getElementById("menu-blog").textContent =
+      menuTranslations[currentLanguage].blog;
+      
+    /*
+     * Date formatting
+     */
+    function formatDate(date) {
+      return new Intl.DateTimeFormat(
+        currentLanguage === "en" ? "en-US" : "cs-CZ",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        }
+      ).format(date);
+    }
+
+
+    /*
+     * Relative date / age
+     */
+    function formatAge(date) {
+      const now = new Date();
+      const diffMs = now - date;
+
+      if (diffMs < 0) {
+        return currentLanguage === "en"
+          ? "future post"
+          : "budoucí příspěvek";
+      }
+
+      const minutes = Math.floor(diffMs / (1000 * 60));
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+
+      // Less than one minute
+      if (minutes < 1) {
+        return currentLanguage === "en"
+          ? "just now"
+          : "právě teď";
+      }
+
+
+      // Less than one hour
+      if (minutes < 60) {
+        if (currentLanguage === "en") {
+          return `${minutes} ${
+            minutes === 1 ? "minute" : "minutes"
+          } ago`;
+        }
+
+        return `před ${minutes} ${
+          minutes === 1 ? "minutou" : "minutami"
+        }`;
+      }
+
+
+      // Less than one day
+      if (hours < 24) {
+        if (currentLanguage === "en") {
+          return `${hours} ${
+            hours === 1 ? "hour" : "hours"
+          } ago`;
+        }
+
+        return `před ${hours} ${
+          hours === 1 ? "hodinou" : "hodinami"
+        }`;
+      }
+
+
+      // Exactly one day
+      if (days === 1) {
+        return currentLanguage === "en"
+          ? "yesterday"
+          : "včera";
+      }
+
+
+      // Less than one week
+      if (days < 7) {
+        if (currentLanguage === "en") {
+          return `${days} days ago`;
+        }
+
+        return `před ${days} dny`;
+      }
+
+
+      // Weeks
+      const weeks = Math.floor(days / 7);
+
+      if (weeks === 1) {
+        return currentLanguage === "en"
+          ? "1 week ago"
+          : "před týdnem";
+      }
+
+      if (weeks < 5) {
+        if (currentLanguage === "en") {
+          return `${weeks} weeks ago`;
+        }
+
+        return `před ${weeks} týdny`;
+      }
+
+
+      // Months
+      const months = Math.floor(days / 30);
+
+      if (months === 1) {
+        return currentLanguage === "en"
+          ? "1 month ago"
+          : "před měsícem";
+      }
+
+      if (months < 12) {
+        if (currentLanguage === "en") {
+          return `${months} months ago`;
+        }
+
+        return `před ${months} měsíci`;
+      }
+
+
+      // Years
+      const years = Math.floor(days / 365);
+
+      if (years === 1) {
+        return currentLanguage === "en"
+          ? "1 year ago"
+          : "před rokem";
+      }
+
+      if (currentLanguage === "en") {
+        return `${years} years ago`;
+      }
+
+      return `před ${years} lety`;
+    }
+
+
+    /*
+     * Load posts
+     */
+    fetch("data/posts.json")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Failed to load posts.json");
+        }
+
+        return response.json();
+      })
+      .then(posts => {
+        const container = document.getElementById("posts");
+
+        if (!posts.length) {
+          container.textContent =
+            currentLanguage === "en"
+              ? "No relevant posts found."
+              : "Nebyly nalezeny žádné relevantní příspěvky.";
+
+          return;
+        }
+
+
+        // Display the newest posts first.
+        posts.sort((a, b) => {
+          const dateA = new Date(a.post_date || 0);
+          const dateB = new Date(b.post_date || 0);
+
+          return dateB - dateA;
+        });
+
+
+        posts.forEach(post => {
+          const article = document.createElement("article");
+
+
+          // Hut name
+          const hut = document.createElement("div");
+          hut.className = "hut";
+
+          hut.textContent =
+            post.hut ||
+            post.instagram_username ||
+            (
+              currentLanguage === "en"
+                ? "Unknown"
+                : "Neznámé"
+            );
+
+
+          // Date
+          const date = document.createElement("div");
+          date.className = "date";
+
+          if (post.post_date) {
+            const postDate = new Date(post.post_date);
+
+            date.textContent =
+              `${formatDate(postDate)} · ${formatAge(postDate)}`;
+          }
+
+
+          // Image
+          const image = document.createElement("img");
+
+          if (post.image_url) {
+            image.src = post.image_url;
+
+            image.alt =
+              post.hut ||
+              (
+                currentLanguage === "en"
+                  ? "Instagram post"
+                  : "Příspěvek na Instagramu"
+              );
+
+            image.loading = "lazy";
+            image.style.width = "500px";
+            image.style.height = "500px";
+            image.style.objectFit = "cover";
+            image.style.display = "block";
+          }
+
+
+          // Keywords
+          const keywords = document.createElement("div");
+          keywords.className = "keywords";
+
+          if (post.matched_keywords?.length) {
+            keywords.textContent =
+              (
+                currentLanguage === "en"
+                  ? "Matched: "
+                  : "Shodná klíčová slova: "
+              ) +
+              post.matched_keywords.join(", ");
+          }
+
+
+          // Instagram link
+          const link = document.createElement("p");
+          const a = document.createElement("a");
+
+          a.href = post.url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+
+          a.textContent =
+            currentLanguage === "en"
+              ? "Instagram post"
+              : "Příspěvek na Instagramu";
+
+          link.appendChild(a);
+
+
+          // Assemble article
+          article.appendChild(hut);
+          article.appendChild(date);
+
+          if (post.image_url) {
+            article.appendChild(image);
+          }
+
+          article.appendChild(keywords);
+          article.appendChild(link);
+
+          container.appendChild(article);
+        });
+      })
+      .catch(error => {
+        document.getElementById("posts").textContent =
+          currentLanguage === "en"
+            ? "Error loading mountain conditions."
+            : "Chyba při načítání horských podmínek.";
+
+        console.error(error);
+      });
+
+  </script>
+
+</body>
+</html>
